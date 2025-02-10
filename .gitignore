@@ -1,0 +1,27 @@
+# Terraform 실행 결과 생성 폴더
+.terraform/
+
+# Terraform 상태 파일 (민감 정보 포함)
+*.tfstate
+*.tfstate.*
+
+# Terraform 계획 파일
+*.tfplan
+
+# Terraform Crash 로그
+crash.log
+
+# Override 파일 (사용자 정의 설정, 커스터마이징 파일)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# 자동 변수 파일 (민감 정보 포함)
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Terraform CLI 설정 파일 (사용자 환경 설정)
+.terraformrc
+terraform.rc
+

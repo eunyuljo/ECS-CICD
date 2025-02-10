@@ -231,7 +231,7 @@ resource "aws_route" "sbcntrRouteIngressDefault" {
 
 # NAT Gateway에 할당할 Elastic IP 생성 (VPC 모드 활성화)
 resource "aws_eip" "sbcntrNatEip" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = "sbcntr-nat-eip"
@@ -398,6 +398,25 @@ resource "aws_security_group" "sbcntrSgDb" {
   }
 }
 
+## VPC 엔드포인트용 보안 그룹
+resource "aws_security_group" "sbcntrSgEgress" {
+  name        = "egress"
+  description = "Security Group of VPC Endpoint"
+  vpc_id      = aws_vpc.sbcntrVpc.id
+
+  egress {
+    description = "Allow all outbound traffic by default"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "sbcntr-sg-vpce"
+  }
+}
+
+
 ##############################################
 # 보안 그룹 간 인그레스 규칙 (별도 리소스로 정의)
 ##############################################
@@ -476,5 +495,38 @@ resource "aws_security_group_rule" "sbcntrSgInternalFromSgManagementTCP" {
   to_port                  = 80
   protocol                 = "tcp"
   security_group_id        = aws_security_group.sbcntrSgInternal.id
+  source_security_group_id = aws_security_group.sbcntrSgManagement.id
+}
+
+## Back container -> VPC endpoint (HTTPS)
+resource "aws_security_group_rule" "sbcntrSgVpceFromSgContainerTCP" {
+  type                     = "ingress"
+  description              = "HTTPS for Container App"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.sbcntrSgEgress.id
+  source_security_group_id = aws_security_group.sbcntrSgContainer.id
+}
+
+## Front container -> VPC endpoint (HTTPS)
+resource "aws_security_group_rule" "sbcntrSgVpceFromSgFrontContainerTCP" {
+  type                     = "ingress"
+  description              = "HTTPS for Front Container App"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.sbcntrSgEgress.id
+  source_security_group_id = aws_security_group.sbcntrSgFrontContainer.id
+}
+
+## Management Server -> VPC endpoint (HTTPS)
+resource "aws_security_group_rule" "sbcntrSgVpceFromSgManagementTCP" {
+  type                     = "ingress"
+  description              = "HTTPS for management server"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.sbcntrSgEgress.id
   source_security_group_id = aws_security_group.sbcntrSgManagement.id
 }

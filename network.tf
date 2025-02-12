@@ -5,7 +5,7 @@ provider "aws" {
   region = "ap-northeast-2"    # 리전 설정: 서울(ap-northeast-2)
 }
 
-# 사용 가능한 가용영역(AZ) 목록 조회 (CloudFormation의 Fn::GetAZs와 동일한 역할)
+data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
 
 ##############################################
@@ -43,7 +43,7 @@ resource "aws_subnet" "sbcntrSubnetPrivateContainer1A" {
 resource "aws_subnet" "sbcntrSubnetPrivateContainer1C" {
   vpc_id                  = aws_vpc.sbcntrVpc.id
   cidr_block              = "10.0.9.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[2]
   map_public_ip_on_launch = false
 
   tags = {
@@ -69,7 +69,7 @@ resource "aws_subnet" "sbcntrSubnetPrivateDb1A" {
 resource "aws_subnet" "sbcntrSubnetPrivateDb1C" {
   vpc_id                  = aws_vpc.sbcntrVpc.id
   cidr_block              = "10.0.17.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[2]
   map_public_ip_on_launch = false
 
   tags = {
@@ -95,7 +95,7 @@ resource "aws_subnet" "sbcntrSubnetPublicIngress1A" {
 resource "aws_subnet" "sbcntrSubnetPublicIngress1C" {
   vpc_id                  = aws_vpc.sbcntrVpc.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[2]
   map_public_ip_on_launch = true
 
   tags = {
@@ -121,7 +121,7 @@ resource "aws_subnet" "sbcntrSubnetPublicManagement1A" {
 resource "aws_subnet" "sbcntrSubnetPublicManagement1C" {
   vpc_id                  = aws_vpc.sbcntrVpc.id
   cidr_block              = "10.0.241.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[2]
   map_public_ip_on_launch = true
 
   tags = {
@@ -129,6 +129,35 @@ resource "aws_subnet" "sbcntrSubnetPublicManagement1C" {
     Type = "Public"
   }
 }
+
+
+
+# --- 컨테이너 애플리케이션용 프라이빗 서브넷 (가용영역 1: index 0) ---
+resource "aws_subnet" "sbcntrSubnetPrivateEgress1A" {
+  vpc_id                  = aws_vpc.sbcntrVpc.id
+  cidr_block              = "10.0.248.0/24"        # 컨테이너 전용 CIDR
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false                # 프라이빗 서브넷
+
+  tags = {
+    Name = "sbcntr-subnet-private-egress-1a"
+    Type = "Isolated"
+  }
+}
+
+# --- Cloudwatch logs 엔드포인트 프라이빗 서브넷 (가용영역 1: index 0) ---
+resource "aws_subnet" "sbcntrSubnetPrivateEgress1C" {
+  vpc_id                  = aws_vpc.sbcntrVpc.id
+  cidr_block              = "10.0.249.0/24"        # 컨테이너 전용 CIDR
+  availability_zone       = data.aws_availability_zones.available.names[2]
+  map_public_ip_on_launch = false                # 프라이빗 서브넷
+
+  tags = {
+    Name = "sbcntr-subnet-private-egress-1c"
+    Type = "Isolated"
+  }
+}
+
 
 ##############################################
 # 라우팅 테이블 생성 및 서브넷 연결
@@ -244,7 +273,7 @@ resource "aws_nat_gateway" "sbcntrNatGateway" {
   subnet_id     = aws_subnet.sbcntrSubnetPublicIngress1A.id  # NAT Gateway는 퍼블릭 서브넷에 위치해야 함
 
   tags = {
-    Name = "sbcntr-nat-gateway"
+    Name = "sbcntr-nat-gat eway"
   }
 }
 
@@ -493,6 +522,17 @@ resource "aws_security_group_rule" "sbcntrSgInternalFromSgManagementTCP" {
   description              = "HTTP for management server (Management SG to Internal LB SG)"
   from_port                = 80
   to_port                  = 80
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.sbcntrSgInternal.id
+  source_security_group_id = aws_security_group.sbcntrSgManagement.id
+}
+
+# --- Management server to Internal LB (HTTP 포트: 10080) ---
+resource "aws_security_group_rule" "sbcntrSgInternalFromSgManagementTCP_10080" {
+  type                     = "ingress"
+  description              = "HTTP for management server (Management SG to Internal LB SG)"
+  from_port                = 10080
+  to_port                  = 10080
   protocol                 = "tcp"
   security_group_id        = aws_security_group.sbcntrSgInternal.id
   source_security_group_id = aws_security_group.sbcntrSgManagement.id

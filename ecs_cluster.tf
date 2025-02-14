@@ -1,4 +1,13 @@
 ##############################################
+# ECS Cluster (Frontend)
+##############################################
+resource "aws_ecs_cluster" "frontend" {
+  name = "sbcntr-ecs-frontend-cluster"
+}
+
+
+
+##############################################
 # ECS 클러스터 생성 (Fargate, Container Insights 활성화)
 ##############################################
 resource "aws_ecs_cluster" "sbcntr_ecs_backend_cluster" {

@@ -570,3 +570,4 @@ resource "aws_security_group_rule" "sbcntrSgVpceFromSgManagementTCP" {
   security_group_id        = aws_security_group.sbcntrSgEgress.id
   source_security_group_id = aws_security_group.sbcntrSgManagement.id
 }
+

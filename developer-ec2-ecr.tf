@@ -103,7 +103,7 @@ data "aws_ami" "amazon_linux_2023" {
 
 resource "aws_instance" "management_ec2" {
   ami                         = data.aws_ami.amazon_linux_2023.id
-  instance_type               = "t2.micro"
+  instance_type               = "t3.medium"
   subnet_id                   = aws_subnet.sbcntrSubnetPublicManagement1A.id
   associate_public_ip_address = true
 

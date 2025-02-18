@@ -36,3 +36,47 @@ resource "aws_service_discovery_private_dns_namespace" "ecs_backend_ns" {
     Name = "sbcntr-ecs-backend-cluster"
   }
 }
+
+
+
+resource "aws_ecr_repository" "sbcntr_frontend" {
+  name                 = "sbcntr-frontend"    # 생성할 ECR 저장소 이름
+  image_tag_mutability = "MUTABLE"              # 태그 변경 가능 여부 (IMMUTABLE로 설정하면 태그 변경 불가)
+  
+  image_scanning_configuration {
+    scan_on_push = true                      # 이미지 푸시 시 자동으로 취약점 스캔 수행 여부
+  }
+  
+  tags = {
+    Environment = "production"
+    Project     = "sbcntr-frontend"
+  }
+}
+
+resource "aws_ecr_repository" "sbcntr_backend" {
+  name                 = "sbcntr-backend"    # 생성할 ECR 저장소 이름
+  image_tag_mutability = "MUTABLE"              # 태그 변경 가능 여부 (IMMUTABLE로 설정하면 태그 변경 불가)
+  
+  image_scanning_configuration {
+    scan_on_push = true                      # 이미지 푸시 시 자동으로 취약점 스캔 수행 여부
+  }
+  
+  tags = {
+    Environment = "production"
+    Project     = "sbcntr-backend"
+  }
+}
+
+resource "aws_ecr_repository" "sbcntr_base" {
+  name                 = "sbcntr-base"    # 생성할 ECR 저장소 이름
+  image_tag_mutability = "MUTABLE"              # 태그 변경 가능 여부 (IMMUTABLE로 설정하면 태그 변경 불가)
+  
+  image_scanning_configuration {
+    scan_on_push = true                      # 이미지 푸시 시 자동으로 취약점 스캔 수행 여부
+  }
+  
+  tags = {
+    Environment = "production"
+    Project     = "sbcntr-base"
+  }
+}

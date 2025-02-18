@@ -15,7 +15,8 @@ resource "aws_iam_role_policy" "ec2_ecr_policy" {
         Action   = ["ecr:ListImages"],
         Resource = [
           aws_ecr_repository.sbcntr_backend.arn,
-          aws_ecr_repository.sbcntr_frontend.arn
+          aws_ecr_repository.sbcntr_frontend.arn,
+          aws_ecr_repository.sbcntr_base.arn
         ]
       },
       {
@@ -42,14 +43,13 @@ resource "aws_iam_role_policy" "ec2_ecr_policy" {
         ],
         Resource = [
           aws_ecr_repository.sbcntr_backend.arn,
-          aws_ecr_repository.sbcntr_frontend.arn
+          aws_ecr_repository.sbcntr_frontend.arn,
+          aws_ecr_repository.sbcntr_base.arn
         ]
       }
     ]
   })
 }
-
-
 
 
 ##############################################
@@ -77,11 +77,19 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# AmazonSSMManagedInstanceCore 정책을 역할에 연결
+resource "aws_iam_role_policy_attachment" "ec2_codecommit_policy_attachment" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitFullAccess"
+}
+
+
 # EC2 인스턴스에 연결할 인스턴스 프로파일 생성
 resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
   name = "ec2-ssm-instance-profile"
   role = aws_iam_role.ec2_ssm_role.name
 }
+
 
 ##############################################
 # EC2 인스턴스 생성 (Management 서브넷에 배치, SSM 사용)
@@ -130,31 +138,3 @@ resource "aws_instance" "management_ec2" {
 
 
 
-
-resource "aws_ecr_repository" "sbcntr_frontend" {
-  name                 = "sbcntr-frontend"    # 생성할 ECR 저장소 이름
-  image_tag_mutability = "MUTABLE"              # 태그 변경 가능 여부 (IMMUTABLE로 설정하면 태그 변경 불가)
-  
-  image_scanning_configuration {
-    scan_on_push = true                      # 이미지 푸시 시 자동으로 취약점 스캔 수행 여부
-  }
-  
-  tags = {
-    Environment = "production"
-    Project     = "sbcntr-frontend"
-  }
-}
-
-resource "aws_ecr_repository" "sbcntr_backend" {
-  name                 = "sbcntr-backend"    # 생성할 ECR 저장소 이름
-  image_tag_mutability = "MUTABLE"              # 태그 변경 가능 여부 (IMMUTABLE로 설정하면 태그 변경 불가)
-  
-  image_scanning_configuration {
-    scan_on_push = true                      # 이미지 푸시 시 자동으로 취약점 스캔 수행 여부
-  }
-  
-  tags = {
-    Environment = "production"
-    Project     = "sbcntr-backend"
-  }
-}

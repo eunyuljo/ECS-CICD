@@ -53,25 +53,25 @@ module "ecs" {
               "awslogs-create-group"  = "true"
             }
           }
-          # 해당 태스크는 SecretManager에 저장된 정보를 참고한다. 
-          # secrets = [
-          #   {
-          #     name      = "DB_USERNAME"
-          #     valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:username::"
-          #   },
-          #   {
-          #     name      = "DB_PASSWORD"
-          #     valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:password::"
-          #   },
-          #   {
-          #     name      = "DB_HOST"
-          #     valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:host::"
-          #   },
-          #   {
-          #     name      = "DB_NAME"
-          #     valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:dbname::"
-          #   }
-          # ]
+          ##해당 태스크는 SecretManager에 저장된 정보를 참고한다. 
+        #  secrets = [
+        #    {
+        #      name      = "DB_USERNAME"
+        #      valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:username::"
+        #    },
+        #    {
+        #      name      = "DB_PASSWORD"
+        #      valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:password::"
+        #    },
+        #    {
+        #      name      = "DB_HOST"
+        #      valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:host::"
+        #    },
+        #    {
+        #      name      = "DB_NAME"
+        #      valueFrom = "${aws_secretsmanager_secret.sbcntr_db_secret.arn}:dbname::"
+        #    }
+        #  ]
 
         }
       }
@@ -122,6 +122,8 @@ module "ecs" {
     Environment = "Production"
     Project     = "sbcntr-backend"
   }
+
+  # depends_on = [aws_secretsmanager_secret.sbcntr_db_secret]
 }
 
 
